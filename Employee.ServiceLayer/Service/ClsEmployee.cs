@@ -29,6 +29,51 @@ namespace Employee.ServiceLayer.Service
         }
 
 
+        public ClsBMEmployee GetEmpDetailsBaseEmpId(int EmpId)
+        {
+            try
+            {
+                ClsBMEmployee objempdetails = _unitOfWork.dbContext.Employees.Where(x=>x.EmployeeId == EmpId).Select(x=> new ClsBMEmployee
+                {
+                    EmployeeId = x.EmployeeId,
+                    EmployeeName = x.EmployeeName,
+                    IsActive = x.IsActive,
+                    CreatedDt = x.CreatedDt,
+                    departmentid=x.departmentid
+                }).FirstOrDefault();
+
+                return objempdetails;
+            }
+            catch(Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public List<ClsEmployeeByDepar> GetEmpNameWithDeparName()
+        {
+            try
+            {
+                List<ClsEmployeeByDepar> lstEmp = _unitOfWork.dbContext.Employees
+                    .GroupJoin(_unitOfWork.dbContext.Department,
+                                emp => emp.departmentid,
+                                depar => depar.departmentid,
+                                (e, d) => new { employee = e, department = d })
+                    .SelectMany(x => x.department.DefaultIfEmpty(),
+                                (y, z) => new ClsEmployeeByDepar
+                                {
+                                    EmployeeName = y.employee.EmployeeName,
+                                    DepartmentName = z.departmentname
+                                }).ToList();
+                return lstEmp;
+            }
+            catch(Exception ex)
+            {
+                throw;
+            }
+        }
+
+
         public List<ClsEmp> GetEmpCountBaseOnDepartment()
         {
 
@@ -36,15 +81,31 @@ namespace Employee.ServiceLayer.Service
                                     join dep in _unitOfWork.dbContext.Department
                                     on emp.departmentid equals dep.departmentid into depar
                                     from de in depar.DefaultIfEmpty()
-                                    group de by new { emp.EmployeeName, emp.EmployeeId } into groupdep
+                                    group de by new { emp.EmployeeName } into groupdep
                                    where groupdep.Count() > 1                                 
                                     select new ClsEmp
                                     {
-                                        EmpName =  groupdep.Key.EmployeeName
-                                        ,
+                                        EmpName =  groupdep.Key.EmployeeName,
                                         deparcount= groupdep.Count()
 
                                     }).ToList();
+
+            List<ClsEmp> objemp1 = _unitOfWork.dbContext.Employees.GroupJoin(
+                _unitOfWork.dbContext.Department,
+                emp => emp.departmentid,
+                depar => depar.departmentid,
+                (e, d) => new { employee = e, department = d })
+                .SelectMany(x => x.department.DefaultIfEmpty(),
+                (y, z) => new { y.employee, z })
+                .GroupBy(g => new { g.employee.EmployeeName })
+                .Where(j => j.Count() > 1)
+                .Select( i => new ClsEmp
+                {
+                    EmpName = i.Key.EmployeeName,
+                    deparcount = i.Count()
+                } )
+                .ToList();
+
 
             return objemp;
 
@@ -64,6 +125,9 @@ namespace Employee.ServiceLayer.Service
             return lstemp;         
         }
 
+       
+
+
         public List<ClsBMEmployee> GetEmpDetailBaseOnDeparId(int DepartId)
         {
             var _params = new SqlParameter("deparId", DepartId);
@@ -80,6 +144,45 @@ namespace Employee.ServiceLayer.Service
             }).ToList();
 
             return lstemployee;
+        }
+
+        public int InsertuserData (ClsCurrentUserInterface request)
+        {
+            try
+            {
+                var userobj = new ClsUser
+                {
+                    email = request.email,
+                    token = request.token,
+                    username = request.username,
+                    bio = request.bio,
+                    image = request.image
+                };
+                _unitOfWork.dbContext.users.Add(userobj);
+                _unitOfWork.dbContext.SaveChanges();
+
+                return userobj.userId;
+            }
+            catch(Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public bool Login(ClsLoginRequestInterface reques)
+        {
+            try
+            {
+                if(_unitOfWork.dbContext.users.Any(x=>x.email == reques.user.email))
+                {
+                    return true;
+                }
+                return false;
+            }
+            catch(Exception ex)
+            {
+                throw;
+            }
         }
 
 

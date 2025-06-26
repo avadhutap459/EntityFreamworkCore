@@ -28,4 +28,10 @@ namespace Employee.ServiceLayer.Model
         public int departmentid { get; set; }
 
     }
+
+    public class ClsEmployeeByDepar
+    {
+        public string EmployeeName { get; set; }
+        public string DepartmentName { get; set; }
+    }
 }

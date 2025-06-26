@@ -14,5 +14,9 @@ namespace Employee.ServiceLayer.Interface
         List<ClsEmp> GetEmpCountBaseOnDepartmentUsingSP();
 
         List<ClsBMEmployee> GetEmpDetailBaseOnDeparId(int DepartId);
+
+        ClsBMEmployee GetEmpDetailsBaseEmpId(int EmpId);
+        int InsertuserData(ClsCurrentUserInterface request);
+        bool Login(ClsLoginRequestInterface reques);
     }
 }

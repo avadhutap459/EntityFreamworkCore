@@ -25,6 +25,7 @@ namespace Employee.ServiceLayer.ServiceExtension
 
             services.AddScoped<IUnitOfWork, UnitOfWorkRepo>();
             services.AddScoped<IEmployee, ClsEmployee>();
+            services.AddScoped<ICake, ClsCake>();
 
             return services;
         }
